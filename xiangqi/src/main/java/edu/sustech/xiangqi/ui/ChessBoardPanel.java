@@ -194,3 +194,4 @@ public class ChessBoardPanel extends JPanel {
                 centerX + cornerSize, centerY + cornerSize - lineLength);
     }
 }
+
