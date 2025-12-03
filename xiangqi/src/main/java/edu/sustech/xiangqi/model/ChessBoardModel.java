@@ -77,7 +77,7 @@ public class ChessBoardModel {
      * @param newCol 目标列
      * @return 移动是否成功
      */
-    public boolean movePiece(AbstractPiece piece, int newRow, int newCol) {
+     public boolean movePiece(AbstractPiece piece, int newRow, int newCol) {
         if (!isValidPosition(newRow, newCol)) {
             return false;
         }
@@ -92,13 +92,23 @@ public class ChessBoardModel {
             return false;
         }
 
-        // 检查目标位置是否有棋子（吃子）
+        // 检查目标位置是否有棋子
         AbstractPiece targetPiece = getPieceAt(newRow, newCol);
+
         if (targetPiece != null) {
             // 不能吃己方棋子
             if (targetPiece.isRed() == piece.isRed()) {
                 return false;
             }
+
+            // 如果是炮，需要特殊处理吃子逻辑
+            if (piece instanceof CannonPiece) {
+                // 炮吃子时，中间必须有一个棋子作为炮架
+                if (!hasExactlyOnePieceBetween(piece, targetPiece)) {
+                    return false;
+                }
+            }
+
             // 吃子：移除目标位置的棋子
             pieces.remove(targetPiece);
         }
@@ -112,6 +122,42 @@ public class ChessBoardModel {
         return true;
     }
 
+    /**
+     * 检查两个棋子之间是否恰好有一个棋子（用于炮的吃子规则）
+     */
+    private boolean hasExactlyOnePieceBetween(AbstractPiece piece1, AbstractPiece piece2) {
+        int fromRow = piece1.getRow();
+        int fromCol = piece1.getCol();
+        int toRow = piece2.getRow();
+        int toCol = piece2.getCol();
+
+        int count = 0;
+
+        if (fromRow == toRow) {
+            // 水平方向
+            int startCol = Math.min(fromCol, toCol);
+            int endCol = Math.max(fromCol, toCol);
+
+            for (int col = startCol + 1; col < endCol; col++) {
+                if (getPieceAt(fromRow, col) != null) {
+                    count++;
+                }
+            }
+        } else if (fromCol == toCol) {
+            // 垂直方向
+            int startRow = Math.min(fromRow, toRow);
+            int endRow = Math.max(fromRow, toRow);
+
+            for (int row = startRow + 1; row < endRow; row++) {
+                if (getPieceAt(row, fromCol) != null) {
+                    count++;
+                }
+            }
+        }
+
+        // 炮吃子要求中间恰好有一个棋子
+        return count == 1;
+    }
     /**
      * 移动棋子（通过坐标）
      * @param fromRow 起始行
@@ -357,3 +403,4 @@ public class ChessBoardModel {
         return COLS;
     }
 }
+
